@@ -5,7 +5,7 @@ library(readr)
 library(ggprism)
 
 ## this is the data input defined as the object 'data'
-data <- E210915_JRR_phageholinsDNP 
+data <- X210915_JRR_phageholinsDNP 
 
 ## transform the data into long format from wide
 data %>%
@@ -37,13 +37,14 @@ parsedlongdata %>% tail()
 
 ## define my color vector? this isn't working yet and now it broke the colors
 ##cols <- c("8" = "red", "4" = "blue", "6" = "darkgreen", "10" = "orange")
-
+  
 ## now to actually generate the plot with this data and defined axes
 ggplot(parsedlongdata, aes(x = Time, y = OD)) +
   
   ## add lines first, colors assigned by sample, line types based on variable
   geom_line(aes(color = Sample, linetype = DNP_Add), size=1.25)  +
-  
+  scale_colour_manual('',
+                      values = c("#00167B", "#9FA3FE", "#ff5733", "#974e3e")) +
   ## Add points on top all black, skip empty rows
   geom_point(aes(shape = Sample), size=2.5, fill="black", na.rm = T) +
   ## choose shapes based on prism defaults for now
