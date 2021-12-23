@@ -3,6 +3,7 @@ library(ggplot2)
 library(dplyr)
 library(readr)
 library(ggprism)
+library(ggrepel)
 
 ## this is the data input defined as the object 'data'
 data <- X210915_JRR_phageholinsDNP 
@@ -35,20 +36,70 @@ longdata %>%
 parsedlongdata %>% head()
 parsedlongdata %>% tail()
 
-## define my color vector? this isn't working yet and now it broke the colors
-##cols <- c("8" = "red", "4" = "blue", "6" = "darkgreen", "10" = "orange")
-  
+# set minor ticks based on max OD, if OD values rise above 1 scale to 10
+if (max(parsedlongdata$OD, na.rm = T) > 1) {
+  max_yax = 10
+  y_minor = c(rep(1:9, 3)*(10^rep(-2:0, each=9)), 10) # minor ticks
+} else {
+  max_yax = 1
+  y_minor = c(rep(1:9, 2)*(10^rep(c(-2, -1), each=9)), 1) # minor ticks
+}
+
+# define custom offset to move line labels away from axis
+offset <- max(parsedlongdata$Time)*0.035
+
+
 ## now to actually generate the plot with this data and defined axes
 ggplot(parsedlongdata, aes(x = Time, y = OD)) +
   
   ## add lines first, colors assigned by sample, line types based on variable
   geom_line(aes(color = Sample, linetype = DNP_Add), size=1.25)  +
+ 
+   ## define color manually for the lines
   scale_colour_manual('',
                       values = c("#00167B", "#9FA3FE", "#ff5733", "#974e3e")) +
-  ## Add points on top all black, skip empty rows
+ 
+   ## Add points on top all black, skip empty rows
   geom_point(aes(shape = Sample), size=2.5, fill="black", na.rm = T) +
+  
+  ## labels next to lines
+  geom_text_repel(data=subset(parsedlongdata, Time == max(parsedlongdata$Time)), # labels next to lines
+                  aes(label=Sample, 
+                      color=Sample, 
+                      x=Inf, # put label off plot
+                      y=OD), # put label at same height as last data point
+                  direction="y",
+                  xlim=c(max(parsedlongdata$Time)+offset, Inf), # offset labels
+                  min.segment.length=Inf, # won't draw lines
+                  hjust=0, # left justify
+                  size=5,
+                  fontface="bold") +
+  
+  ## log scale on y depends on above obect that defines y max as max_yax
+  scale_y_log10(limit=c(0.01,max_yax), # put y on log10 scale
+                minor_breaks=y_minor,
+                guide=guide_prism_minor(),
+                expand=c(0,0)) + 
+  
+  ## set x intervals
+  scale_x_continuous(minor_breaks=seq(0,max(parsedlongdata$Time),by=10),
+                     guide=guide_prism_minor(),
+                     expand=c(0,0)) + 
+ 
+  ## give new axis labels
+  labs(x="Time (min)",
+       y="A550") +
+ 
+  ## background white, border, thick lines, and other nice theme things
+  theme_prism(border=T) + # theme like prism plot
+  
+  ## apparently makes the border lines as thick as the ticks
+  coord_cartesian(clip="off") +
+  
   ## choose shapes based on prism defaults for now
-  scale_shape_prism(palette = "default") #+
-  ## Cody's custom-defined vector of colors added in here
-#  scale_color_manual(values = cols)
-# theme_prism(border=T, palette = "colors")
+  scale_shape_prism(palette = "default") +
+
+  ## removes legend and makes it a square
+  theme(aspect.ratio=1/1, 
+        legend.position = "none",
+        plot.margin=unit(c(1,5,1,1), "lines"))
