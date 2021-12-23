@@ -4,6 +4,7 @@ library(dplyr)
 library(readr)
 library(ggprism)
 library(ggrepel)
+library(r2symbols)
 
 ## this is the data input defined as the object 'data'
 data <- X210915_JRR_phageholinsDNP 
@@ -48,32 +49,42 @@ if (max(parsedlongdata$OD, na.rm = T) > 1) {
 # define custom offset to move line labels away from axis
 offset <- max(parsedlongdata$Time)*0.035
 
-
 ## now to actually generate the plot with this data and defined axes
-ggplot(parsedlongdata, aes(x = Time, y = OD)) +
+ggplot(parsedlongdata, 
+       aes(x = Time, y = OD)) +
   
   ## add lines first, colors assigned by sample, line types based on variable
   geom_line(aes(color = Sample, linetype = DNP_Add), size=1.25)  +
  
    ## define color manually for the lines
   scale_colour_manual('',
-                      values = c("#00167B", "#9FA3FE", "#ff5733", "#974e3e")) +
- 
+                      values = c("#000000ff", "#696969ff", "#c60707ff", "#0000ffff")) +
+      ## black = 000000ff
+      ## red = c60707ff
+      ## blue = 0000ffff
+      ## green = 13c559ff
+      ## pink = ff00ccff
+      ## light grey = e6e6e6ff
+      ## dark gray = 696969ff
+  
    ## Add points on top all black, skip empty rows
   geom_point(aes(shape = Sample), size=2.5, fill="black", na.rm = T) +
   
   ## labels next to lines
-  geom_text_repel(data=subset(parsedlongdata, Time == max(parsedlongdata$Time)), # labels next to lines
-                  aes(label=Sample, 
-                      color=Sample, 
-                      x=Inf, # put label off plot
-                      y=OD), # put label at same height as last data point
-                  direction="y",
-                  xlim=c(max(parsedlongdata$Time)+offset, Inf), # offset labels
-                  min.segment.length=Inf, # won't draw lines
-                  hjust=0, # left justify
-                  size=5,
-                  fontface="bold") +
+  # geom_text_repel(data=subset(parsedlongdata, Time == max(parsedlongdata$Time)), # labels next to lines
+  #                 aes(label=Sample, 
+  #                     color=Sample, 
+  #                     x=Inf, # put label off plot
+  #                     y=OD), # put label at same height as last data point
+  #                 direction="y",
+  #                 xlim=c(max(parsedlongdata$Time)+offset, Inf), # offset labels
+  #                 min.segment.length=Inf, # won't draw lines
+  #                 hjust=0, # left justify
+  #                 size=5,
+  #                 fontface="bold") +
+  
+  ##to add greek letters displayed use
+  ## expression(paste("text", delta, "text"))
   
   ## log scale on y depends on above obect that defines y max as max_yax
   scale_y_log10(limit=c(0.01,max_yax), # put y on log10 scale
@@ -88,7 +99,7 @@ ggplot(parsedlongdata, aes(x = Time, y = OD)) +
  
   ## give new axis labels
   labs(x="Time (min)",
-       y="A550") +
+       y= "A550") +
  
   ## background white, border, thick lines, and other nice theme things
   theme_prism(border=T) + # theme like prism plot
@@ -97,9 +108,9 @@ ggplot(parsedlongdata, aes(x = Time, y = OD)) +
   coord_cartesian(clip="off") +
   
   ## choose shapes based on prism defaults for now
-  scale_shape_prism(palette = "default") +
+  scale_shape_prism(palette = "filled") +
 
   ## removes legend and makes it a square
   theme(aspect.ratio=1/1, 
-        legend.position = "none",
+        #legend.position = "none",
         plot.margin=unit(c(1,5,1,1), "lines"))
